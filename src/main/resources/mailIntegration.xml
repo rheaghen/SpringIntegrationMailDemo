@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-mail="http://www.springframework.org/schema/integration/mail"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration/mail http://www.springframework.org/schema/integration/mail/spring-integration-mail.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd">
+	
+	transactionManager
+	
+	<task:executor id="mailTasks"/>
+	
+	<int:poller id="mailPoller" task-executor="mailTasks" max-messages-per-poll="10" fixed-rate="500" >
+		<int:transactional />	
+	</int:poller>
+	
+	<int-mail:inbound-channel-adapter
+		header-mapper="mailMapper"
+		store-uri="imaps://${email.user}:${email.password}@imap.gmail.com/INBOX" channel="notificationsChannel" 
+		should-delete-messages="false"
+		embedded-parts-as-bytes="true"
+	>
+		<int:poller ref="mailPoller" />
+	</int-mail:inbound-channel-adapter>
+	
+	
+	
+	<bean id="defaultMailHeaderMapper" class="org.springframework.integration.mail.support.DefaultMailHeaderMapper"/>
+
+	<int:channel id="notificationsChannel"  />
+
+</beans>
